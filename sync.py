@@ -5,7 +5,7 @@ from pathlib import Path
 from classifier import classify
 from config import ClassConfig, LOCAL_BASE_PATH
 from drive_client import DriveClient, parse_drive_timestamp
-from filename_parser import InvalidFilename, parse_filename
+from filename_parser import InvalidFilename, parse_due_date
 
 
 @dataclass
@@ -49,23 +49,24 @@ def sync(
 
         for file_info in drive.list_files_in_folder(homework_folder_id):
             try:
-                due_date, full_name = parse_filename(file_info["name"])
+                due_date = parse_due_date(file_info["name"])
             except InvalidFilename:
                 continue
             if not (start <= due_date <= end):
                 continue
-            if full_name != student_name:
-                continue
+
+            extension = Path(file_info["name"]).suffix
+            local_filename = f"{due_date.isoformat()}_{student_name}{extension}"
 
             created_at = parse_drive_timestamp(file_info["createdTime"])
             bucket = classify(due_date, created_at, class_config)
-            target = base_path / class_config.key / bucket / "submitted" / file_info["name"]
+            target = base_path / class_config.key / bucket / "submitted" / local_filename
 
             if target.exists():
-                results.append(SyncResult(student_name, file_info["name"], "skipped", bucket))
+                results.append(SyncResult(student_name, local_filename, "skipped", bucket))
                 continue
 
             drive.download_file(file_info["id"], target)
-            results.append(SyncResult(student_name, file_info["name"], "downloaded", bucket))
+            results.append(SyncResult(student_name, local_filename, "downloaded", bucket))
 
     return results

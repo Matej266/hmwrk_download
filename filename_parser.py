@@ -3,10 +3,26 @@ from datetime import date
 from pathlib import Path
 
 FILENAME_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})_(.+)$")
+DATE_PREFIX_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})(?:_.*)?$")
 
 
 class InvalidFilename(ValueError):
     pass
+
+
+def parse_due_date(filename: str) -> date:
+    """Extracts just the leading '<date>' or '<date>_...' prefix, ignoring
+    whatever a student wrote after it (their own name, spelled however)."""
+    stem = Path(filename).stem
+    match = DATE_PREFIX_RE.match(stem)
+    if not match:
+        raise InvalidFilename(
+            f"filename does not start with a '<date>' prefix: {filename!r}"
+        )
+    try:
+        return date.fromisoformat(match.group(1))
+    except ValueError as exc:
+        raise InvalidFilename(f"invalid date in filename: {filename!r}") from exc
 
 
 def parse_filename(filename: str) -> tuple[date, str]:

@@ -2,7 +2,20 @@ from datetime import date
 
 import pytest
 
-from filename_parser import InvalidFilename, corrected_filename, parse_filename
+from filename_parser import InvalidFilename, corrected_filename, parse_due_date, parse_filename
+
+
+def test_parse_due_date_extracts_date_ignoring_rest_of_filename():
+    assert parse_due_date("2026-03-02_Jon Smyth.pdf") == date(2026, 3, 2)
+
+
+def test_parse_due_date_accepts_date_only_filename():
+    assert parse_due_date("2026-03-02.pdf") == date(2026, 3, 2)
+
+
+def test_parse_due_date_rejects_missing_date_prefix():
+    with pytest.raises(InvalidFilename):
+        parse_due_date("homework.pdf")
 
 
 def test_parse_filename_extracts_date_and_full_name():

@@ -60,3 +60,27 @@ def test_sync_ignores_files_outside_date_range(tmp_path):
     results = sync(drive, CLASSES["calc"], date(2026, 4, 1), date(2026, 4, 30), base_path=tmp_path)
 
     assert results == []
+
+
+def test_sync_renames_local_file_using_drive_folder_name_not_uploaded_filename(tmp_path):
+    drive = FakeDriveClient(
+        folders_by_parent={
+            None: [{"id": "class1", "name": "AP Calc - 2026/2027"}],
+            "class1": [{"id": "student1", "name": "AP Calc - John Smith"}],
+            "student1": [{"id": "hw1", "name": "AP Calc Homeworks - John Smith"}],
+        },
+        files_by_folder={
+            "hw1": [
+                {
+                    "id": "f1",
+                    "name": "2026-03-02_Jon Smyth (phonetic spelling).pdf",
+                    "createdTime": "2026-03-02T15:00:00.000Z",
+                }
+            ]
+        },
+    )
+
+    results = sync(drive, CLASSES["calc"], date(2026, 3, 2), date(2026, 3, 2), base_path=tmp_path)
+
+    assert results[0].filename == "2026-03-02_John Smith.pdf"
+    assert (tmp_path / "calc" / "2026-03-02" / "submitted" / "2026-03-02_John Smith.pdf").exists()
