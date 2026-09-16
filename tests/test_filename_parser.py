@@ -13,6 +13,12 @@ def test_parse_due_date_accepts_date_only_filename():
     assert parse_due_date("2026-03-02.pdf") == date(2026, 3, 2)
 
 
+def test_parse_due_date_accepts_any_separator_after_the_date():
+    assert parse_due_date("2026-03-02 Jon Smyth.pdf") == date(2026, 3, 2)
+    assert parse_due_date("2026-03-02-Jon Smyth.pdf") == date(2026, 3, 2)
+    assert parse_due_date("2026-03-02JonSmyth.pdf") == date(2026, 3, 2)
+
+
 def test_parse_due_date_rejects_missing_date_prefix():
     with pytest.raises(InvalidFilename):
         parse_due_date("homework.pdf")

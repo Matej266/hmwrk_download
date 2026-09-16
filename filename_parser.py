@@ -3,7 +3,7 @@ from datetime import date
 from pathlib import Path
 
 FILENAME_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})_(.+)$")
-DATE_PREFIX_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})(?:_.*)?$")
+DATE_PREFIX_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})")
 
 
 class InvalidFilename(ValueError):
@@ -11,8 +11,8 @@ class InvalidFilename(ValueError):
 
 
 def parse_due_date(filename: str) -> date:
-    """Extracts just the leading '<date>' or '<date>_...' prefix, ignoring
-    whatever a student wrote after it (their own name, spelled however)."""
+    """Extracts just the leading '<date>' prefix, ignoring whatever separator
+    (or none) and text follows it (their own name, spelled however)."""
     stem = Path(filename).stem
     match = DATE_PREFIX_RE.match(stem)
     if not match:
