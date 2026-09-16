@@ -10,7 +10,7 @@ def write_log(rows: Sequence[dict], log_dir: str = "logs") -> Path:
     log_path = Path(log_dir) / f"run_{timestamp}.csv"
 
     fieldnames = sorted({key for row in rows for key in row.keys()})
-    with open(log_path, "w", newline="") as fh:
+    with open(log_path, "w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)

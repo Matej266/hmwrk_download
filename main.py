@@ -1,5 +1,6 @@
 import argparse
 import dataclasses
+import sys
 from datetime import date
 
 from config import CLASSES
@@ -31,6 +32,11 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> None:
+    # Windows' legacy console codepage can't display non-Latin student names
+    # (Chinese, Russian, etc.); fall back to '?' for undisplayable characters
+    # instead of crashing.
+    sys.stdout.reconfigure(errors="replace")
+
     args = build_parser().parse_args(argv)
     class_config = CLASSES[args.class_key]
     drive = DriveClient.authenticated()
