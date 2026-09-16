@@ -19,6 +19,16 @@ def test_parse_due_date_accepts_any_separator_after_the_date():
     assert parse_due_date("2026-03-02JonSmyth.pdf") == date(2026, 3, 2)
 
 
+def test_parse_due_date_accepts_underscore_or_dot_separators():
+    assert parse_due_date("2026_03_02_Jon Smyth.pdf") == date(2026, 3, 2)
+    assert parse_due_date("2026.03.02.Jon Smyth.pdf") == date(2026, 3, 2)
+
+
+def test_parse_due_date_accepts_non_zero_padded_month_and_day():
+    assert parse_due_date("2026-3-2_Jon Smyth.pdf") == date(2026, 3, 2)
+    assert parse_due_date("2026_9_4 Jon Smyth.pdf") == date(2026, 9, 4)
+
+
 def test_parse_due_date_rejects_missing_date_prefix():
     with pytest.raises(InvalidFilename):
         parse_due_date("homework.pdf")
