@@ -12,6 +12,7 @@ from filename_parser import InvalidFilename, parse_due_date
 class SyncResult:
     student: str
     filename: str
+    original_filename: str
     action: str
     bucket: str
 
@@ -63,10 +64,14 @@ def sync(
             target = base_path / class_config.key / bucket / "submitted" / local_filename
 
             if target.exists():
-                results.append(SyncResult(student_name, local_filename, "skipped", bucket))
+                results.append(
+                    SyncResult(student_name, local_filename, file_info["name"], "skipped", bucket)
+                )
                 continue
 
             drive.download_file(file_info["id"], target)
-            results.append(SyncResult(student_name, local_filename, "downloaded", bucket))
+            results.append(
+                SyncResult(student_name, local_filename, file_info["name"], "downloaded", bucket)
+            )
 
     return results

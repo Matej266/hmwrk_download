@@ -83,4 +83,5 @@ def test_sync_renames_local_file_using_drive_folder_name_not_uploaded_filename(t
     results = sync(drive, CLASSES["calc"], date(2026, 3, 2), date(2026, 3, 2), base_path=tmp_path)
 
     assert results[0].filename == "2026-03-02_John Smith.pdf"
+    assert results[0].original_filename == "2026-03-02_Jon Smyth (phonetic spelling).pdf"
     assert (tmp_path / "calc" / "2026-03-02" / "submitted" / "2026-03-02_John Smith.pdf").exists()
