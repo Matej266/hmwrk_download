@@ -5,3 +5,4 @@ __pycache__/
 downloads/
 Hmwrks/
 logs/
+.pytest_cache/
