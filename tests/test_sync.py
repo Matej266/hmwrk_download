@@ -62,6 +62,28 @@ def test_sync_ignores_files_outside_date_range(tmp_path):
     assert results == []
 
 
+def test_sync_copies_downloaded_file_into_sibling_corrected_folder(tmp_path):
+    drive = build_fake_drive()
+
+    sync(drive, CLASSES["calc"], date(2026, 3, 2), date(2026, 3, 2), base_path=tmp_path)
+
+    submitted = tmp_path / "calc" / "2026-03-02" / "submitted" / "2026-03-02_John Smith.pdf"
+    corrected = tmp_path / "calc" / "2026-03-02" / "corrected" / "2026-03-02_John Smith.pdf"
+    assert corrected.exists()
+    assert corrected.read_text() == submitted.read_text()
+
+
+def test_sync_never_overwrites_an_existing_corrected_file(tmp_path):
+    drive = build_fake_drive()
+    corrected = tmp_path / "calc" / "2026-03-02" / "corrected" / "2026-03-02_John Smith.pdf"
+    corrected.parent.mkdir(parents=True)
+    corrected.write_text("already annotated by the TA")
+
+    sync(drive, CLASSES["calc"], date(2026, 3, 2), date(2026, 3, 2), base_path=tmp_path)
+
+    assert corrected.read_text() == "already annotated by the TA"
+
+
 def test_sync_appends_pdf_extension_when_uploaded_file_has_none(tmp_path):
     drive = FakeDriveClient(
         folders_by_parent={

@@ -1,3 +1,4 @@
+import shutil
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
@@ -24,6 +25,14 @@ def _student_name_from_folder(folder_name: str, class_prefix: str) -> str | None
     if not folder_name.startswith(prefix):
         return None
     return folder_name[len(prefix):]
+
+
+def _ensure_corrected_copy(submitted_path: Path, bucket_dir: Path, local_filename: str) -> None:
+    corrected_path = bucket_dir / "corrected" / local_filename
+    if corrected_path.exists():
+        return  # don't clobber annotations already made on a prior copy
+    corrected_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(submitted_path, corrected_path)
 
 
 def sync(
@@ -77,17 +86,20 @@ def sync(
 
             created_at = parse_drive_timestamp(file_info["createdTime"])
             bucket = classify(due_date, created_at, class_config)
-            target = base_path / class_config.key / bucket / "submitted" / local_filename
+            bucket_dir = base_path / class_config.key / bucket
+            target = bucket_dir / "submitted" / local_filename
 
             if target.exists():
                 results.append(
                     SyncResult(student_name, local_filename, file_info["name"], "skipped", bucket)
                 )
+                _ensure_corrected_copy(target, bucket_dir, local_filename)
                 continue
 
             drive.download_file(file_info["id"], target)
             results.append(
                 SyncResult(student_name, local_filename, file_info["name"], "downloaded", bucket)
             )
+            _ensure_corrected_copy(target, bucket_dir, local_filename)
 
     return results
