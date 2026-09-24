@@ -78,7 +78,7 @@ class DriveClient:
 
     def list_files_in_folder(self, folder_id: str) -> list[dict]:
         query = f"'{folder_id}' in parents and trashed=false and mimeType != '{FOLDER_MIME}'"
-        return self._list(query, "files(id, name, createdTime)")
+        return self._list(query, "files(id, name, createdTime, mimeType)")
 
     def download_file(self, file_id: str, destination: Path) -> None:
         destination.parent.mkdir(parents=True, exist_ok=True)

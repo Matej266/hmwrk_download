@@ -62,6 +62,32 @@ def test_sync_ignores_files_outside_date_range(tmp_path):
     assert results == []
 
 
+def test_sync_skips_native_google_docs_instead_of_crashing(tmp_path):
+    drive = FakeDriveClient(
+        folders_by_parent={
+            None: [{"id": "class1", "name": "AP Calc - 2026/2027"}],
+            "class1": [{"id": "student1", "name": "AP Calc - John Smith"}],
+            "student1": [{"id": "hw1", "name": "AP Calc Homeworks - John Smith"}],
+        },
+        files_by_folder={
+            "hw1": [
+                {
+                    "id": "f1",
+                    "name": "2026-03-02_John Smith",
+                    "createdTime": "2026-03-02T15:00:00.000Z",
+                    "mimeType": "application/vnd.google-apps.document",
+                }
+            ]
+        },
+    )
+
+    results = sync(drive, CLASSES["calc"], date(2026, 3, 2), date(2026, 3, 2), base_path=tmp_path)
+
+    assert results[0].action == "unsupported_google_doc"
+    assert drive.downloaded == []
+    assert not (tmp_path / "calc").exists()
+
+
 def test_sync_renames_local_file_using_drive_folder_name_not_uploaded_filename(tmp_path):
     drive = FakeDriveClient(
         folders_by_parent={

@@ -45,6 +45,10 @@ def test_list_files_in_folder_returns_metadata():
     }
     client = DriveClient(service)
     files = client.list_files_in_folder("folder123")
+
+    _, kwargs = service.files.return_value.list.call_args
+    assert "mimeType" in kwargs["fields"]
+
     assert files == [
         {
             "id": "f1",
