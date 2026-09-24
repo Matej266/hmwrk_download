@@ -72,7 +72,7 @@ def sync(
                 )
                 continue
 
-            extension = Path(file_info["name"]).suffix
+            extension = Path(file_info["name"]).suffix or ".pdf"
             local_filename = f"{due_date.isoformat()}_{student_name}{extension}"
 
             created_at = parse_drive_timestamp(file_info["createdTime"])
