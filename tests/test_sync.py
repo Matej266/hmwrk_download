@@ -18,11 +18,13 @@ def build_fake_drive():
                     "id": "f1",
                     "name": "2026-03-02_John Smith.pdf",
                     "createdTime": "2026-03-02T15:00:00.000Z",
+                    "mimeType": "application/pdf",
                 },
                 {
                     "id": "f2",
                     "name": "2026-03-02_John Smith.pdf",
                     "createdTime": "2026-03-06T15:00:00.000Z",
+                    "mimeType": "application/pdf",
                 },
             ]
         },
@@ -137,7 +139,7 @@ def test_sync_appends_pdf_extension_when_uploaded_file_has_none(tmp_path):
     assert (tmp_path / "calc" / "2026-03-02" / "submitted" / "2026-03-02_John Smith.pdf").exists()
 
 
-def test_sync_skips_native_google_docs_instead_of_crashing(tmp_path):
+def test_sync_skips_anything_that_is_not_a_pdf(tmp_path):
     drive = FakeDriveClient(
         folders_by_parent={
             None: [{"id": "class1", "name": "AP Calc - 2026/2027"}],
@@ -147,18 +149,24 @@ def test_sync_skips_native_google_docs_instead_of_crashing(tmp_path):
         files_by_folder={
             "hw1": [
                 {
-                    "id": "f1",
+                    "id": "photo",
+                    "name": "2026-03-02",
+                    "createdTime": "2026-03-02T15:00:00.000Z",
+                    "mimeType": "image/jpeg",
+                },
+                {
+                    "id": "gdoc",
                     "name": "2026-03-02_John Smith",
                     "createdTime": "2026-03-02T15:00:00.000Z",
                     "mimeType": "application/vnd.google-apps.document",
-                }
+                },
             ]
         },
     )
 
     results = sync(drive, CLASSES["calc"], date(2026, 3, 2), date(2026, 3, 2), base_path=tmp_path)
 
-    assert results[0].action == "unsupported_google_doc"
+    assert [r.action for r in results] == ["skipped_not_pdf", "skipped_not_pdf"]
     assert drive.downloaded == []
     assert not (tmp_path / "calc").exists()
 
@@ -176,6 +184,7 @@ def test_sync_renames_local_file_using_drive_folder_name_not_uploaded_filename(t
                     "id": "f1",
                     "name": "2026-03-02_Jon Smyth (phonetic spelling).pdf",
                     "createdTime": "2026-03-02T15:00:00.000Z",
+                    "mimeType": "application/pdf",
                 }
             ]
         },

@@ -8,7 +8,7 @@ from config import ClassConfig, LOCAL_BASE_PATH
 from drive_client import DriveClient, parse_drive_timestamp
 from filename_parser import InvalidFilename, parse_due_date
 
-GOOGLE_NATIVE_MIME_PREFIX = "application/vnd.google-apps."
+PDF_MIME = "application/pdf"
 
 
 @dataclass
@@ -80,22 +80,21 @@ def sync(
             if not (start <= due_date <= end):
                 continue
 
-            if file_info.get("mimeType", "").startswith(GOOGLE_NATIVE_MIME_PREFIX):
-                # Google Docs/Sheets/Slides aren't real downloadable files —
-                # ask the student to re-upload as PDF instead.
+            if file_info.get("mimeType") != PDF_MIME:
+                # Checked by Drive's MIME type, not the filename: students often
+                # upload photos or Google Docs with no extension at all.
                 results.append(
                     SyncResult(
                         student_name,
                         file_info["name"],
                         file_info["name"],
-                        "unsupported_google_doc",
+                        "skipped_not_pdf",
                         classify(due_date, parse_drive_timestamp(file_info["createdTime"]), class_config),
                     )
                 )
                 continue
 
-            extension = Path(file_info["name"]).suffix or ".pdf"
-            local_filename = f"{due_date.isoformat()}_{student_name}{extension}"
+            local_filename = f"{due_date.isoformat()}_{student_name}.pdf"
 
             created_at = parse_drive_timestamp(file_info["createdTime"])
             bucket = classify(due_date, created_at, class_config)

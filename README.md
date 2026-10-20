@@ -27,6 +27,12 @@ without extra notes):
   not: `2026-03-02`, `2026_3_2`, `2026.03.02` are all valid.
 - Anything (or nothing) can follow: `2026-03-02_John Smith.pdf`,
   `2026-03-02 funny note here.pdf`, `2026-03-02.pdf` all work.
+- The date must be a **Monday**. A file dated any other day (e.g. a student
+  writing the day they actually submitted) is skipped and logged as
+  `skipped_not_monday`.
+- The file must be a **PDF** (judged by Drive's file type, not the
+  extension). Photos, Google Docs, etc. are skipped and logged as
+  `skipped_not_pdf`. Downloaded files are always saved with `.pdf`.
 
 The script identifies *whose* file it is from the Drive folder it came
 from — not from the name in the filename — so it doesn't matter if a
@@ -128,7 +134,8 @@ Hmwrks/
 Every run prints a summary to the console and writes a CSV to
 `logs/run_<timestamp>.csv` with one row per file: student, canonical
 filename, the original Drive filename (in case a student left a note in it),
-action taken (`downloaded` / `skipped` / `uploaded` / `no_matching_folder`),
+action taken (`downloaded` / `skipped` / `skipped_not_monday` /
+`skipped_not_pdf` / `uploaded` / `no_matching_folder`),
 and the assignment bucket (due-date or `late`).
 
 ### Scheduling
