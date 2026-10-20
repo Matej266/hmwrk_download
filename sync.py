@@ -1,6 +1,6 @@
 import shutil
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import date
 from pathlib import Path
 
 from classifier import classify
@@ -18,13 +18,6 @@ class SyncResult:
     original_filename: str
     action: str
     bucket: str
-
-
-def _assignment_monday(parsed_date: date) -> date:
-    """Snaps a date parsed from a filename down to the Monday of its week,
-    since some students put their actual submission date (not the Monday
-    the assignment was due) in the filename."""
-    return parsed_date - timedelta(days=parsed_date.weekday())
 
 
 def _student_name_from_folder(folder_name: str, class_prefix: str) -> str | None:
@@ -68,9 +61,22 @@ def sync(
 
         for file_info in drive.list_files_in_folder(homework_folder_id):
             try:
-                due_date = _assignment_monday(parse_due_date(file_info["name"]))
+                due_date = parse_due_date(file_info["name"])
             except InvalidFilename:
                 continue
+
+            if due_date.weekday() != 0:
+                # Only a Monday is a real assignment due-date; a student who
+                # put their actual (later) submission date in the filename
+                # instead gets flagged here rather than silently downloaded
+                # into the wrong week.
+                results.append(
+                    SyncResult(
+                        student_name, file_info["name"], file_info["name"], "skipped_not_monday", "invalid"
+                    )
+                )
+                continue
+
             if not (start <= due_date <= end):
                 continue
 

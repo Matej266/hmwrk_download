@@ -62,7 +62,7 @@ def test_sync_ignores_files_outside_date_range(tmp_path):
     assert results == []
 
 
-def test_sync_snaps_non_monday_filename_dates_to_that_weeks_monday(tmp_path):
+def test_sync_skips_file_whose_filename_date_is_not_a_monday(tmp_path):
     drive = FakeDriveClient(
         folders_by_parent={
             None: [{"id": "class1", "name": "AP Calc - 2026/2027"}],
@@ -73,7 +73,9 @@ def test_sync_snaps_non_monday_filename_dates_to_that_weeks_monday(tmp_path):
             "hw1": [
                 {
                     "id": "f1",
-                    # 2026-03-05 is a Thursday, not the Monday due date
+                    # 2026-03-05 is a Thursday — the student put their actual
+                    # submission date instead of the assignment's Monday due
+                    # date, so this should be skipped, not downloaded.
                     "name": "2026-03-05_John Smith.pdf",
                     "createdTime": "2026-03-02T10:00:00.000Z",
                 }
@@ -81,11 +83,11 @@ def test_sync_snaps_non_monday_filename_dates_to_that_weeks_monday(tmp_path):
         },
     )
 
-    results = sync(drive, CLASSES["calc"], date(2026, 3, 2), date(2026, 3, 2), base_path=tmp_path)
+    results = sync(drive, CLASSES["calc"], date(2026, 3, 2), date(2026, 3, 8), base_path=tmp_path)
 
-    assert results[0].filename == "2026-03-02_John Smith.pdf"
-    assert results[0].bucket == "2026-03-02"
-    assert (tmp_path / "calc" / "2026-03-02" / "submitted" / "2026-03-02_John Smith.pdf").exists()
+    assert results[0].action == "skipped_not_monday"
+    assert drive.downloaded == []
+    assert not (tmp_path / "calc").exists()
 
 
 def test_sync_copies_downloaded_file_into_sibling_corrected_folder(tmp_path):
