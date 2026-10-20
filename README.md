@@ -50,13 +50,28 @@ the log.
    pip install google-api-python-client google-auth-oauthlib pytest
    ```
 4. **Edit `config.py`** to match your classes (see Customizing below).
-5. First run will open a browser window to authenticate — sign in with the
-   Google account that has access to the Drive folders. This creates
-   `token.json` so you won't need to re-authenticate every run (delete it to
-   force a fresh login, e.g. if you change the OAuth scope or switch
-   accounts).
+5. Every run opens a browser window to authenticate — sign in with the
+   Google account that has access to the Drive folders. The login isn't
+   cached to disk, so this happens every time (see "Why no token caching"
+   below).
 
-`credentials.json` and `token.json` are gitignored — never commit them.
+`credentials.json` is gitignored — never commit it.
+
+### Why no token caching
+
+Earlier versions cached the login to `token.json` so you didn't have to
+re-authenticate every run. While the Cloud Console OAuth consent screen is
+in "Testing" publishing status, though, Google expires that cached login
+after 7 days — which meant the script would crash with `invalid_grant:
+Token has been expired or revoked` right when you went to correct the next
+batch of homework, requiring a manual `del token.json` to recover. Logging
+in fresh every run avoids that at the cost of a browser prompt each time.
+
+If the extra prompt becomes annoying, switch the OAuth consent screen's
+Publishing status to "In production" in Cloud Console (no verification
+review needed for personal use — you'll just see a "Google hasn't verified
+this app" warning to click through). That removes the 7-day expiry, and
+caching could be reintroduced safely at that point.
 
 ## Usage
 

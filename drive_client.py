@@ -1,36 +1,23 @@
-import os
 from datetime import datetime, timezone
 from pathlib import Path
 
-from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 
 SCOPES = ["https://www.googleapis.com/auth/drive"]
-TOKEN_PATH = "token.json"
 CREDENTIALS_PATH = "credentials.json"
 FOLDER_MIME = "application/vnd.google-apps.folder"
 
 
 def get_credentials() -> Credentials:
-    creds = None
-    if os.path.exists(TOKEN_PATH):
-        creds = Credentials.from_authorized_user_file(TOKEN_PATH, SCOPES)
-
-    if creds and creds.valid:
-        return creds
-
-    if creds and creds.expired and creds.refresh_token:
-        creds.refresh(Request())
-    else:
-        flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, SCOPES)
-        creds = flow.run_local_server(port=0)
-
-    with open(TOKEN_PATH, "w") as token_file:
-        token_file.write(creds.to_json())
-    return creds
+    # Not cached to disk: while the OAuth consent screen is in "Testing"
+    # publishing status, Google expires refresh tokens after 7 days, which
+    # was crashing runs with a stale token.json. Always logging in fresh
+    # avoids that at the cost of a browser prompt every run.
+    flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, SCOPES)
+    return flow.run_local_server(port=0)
 
 
 def parse_drive_timestamp(value: str) -> datetime:
